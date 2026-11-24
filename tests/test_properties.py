@@ -6,6 +6,7 @@ from collections import deque
 import pytest
 
 from drone.astar import COLS, GOAL, ROWS, START, a_star, manhattan, neighbours
+from drone.astar import OBSTACLES
 from drone.bayes import bayes, wind_belief
 from drone.mdp import break_even, choose_action
 from drone.pipeline import run_mission
@@ -19,12 +20,20 @@ def random_grids(n=200, seed=1303):
         yield set(rng.sample(FREE, rng.randint(0, 14)))
 
 
+def grid_steps(cell, obstacles):
+    """Independent neighbour generator for the BFS ground truth (does not reuse drone.astar)."""
+    r, c = cell
+    for nr, nc in ((r + 1, c), (r, c + 1), (r - 1, c), (r, c - 1)):
+        if nr in range(6) and nc in range(6) and (nr, nc) not in obstacles:
+            yield nr, nc
+
+
 def bfs_distances(source, obstacles):
     dist = {source: 0}
     queue = deque([source])
     while queue:
         cell = queue.popleft()
-        for nb in neighbours(cell, obstacles):
+        for nb in grid_steps(cell, obstacles):
             if nb not in dist:
                 dist[nb] = dist[cell] + 1
                 queue.append(nb)
@@ -97,3 +106,22 @@ def test_no_route_always_waits():
             m = run_mission(obstacles={(4, 5), (5, 4)}, prior=prior, alert=alert)
             assert m["path"] is None and m["L"] is None
             assert m["action"].startswith("Wait")
+
+
+def test_exact_tie_fly_wins():
+    """Main map, prior 0.40, both sensor rates 0.50: b = b* = 0.40 and both Q = -2.
+
+    max() keeps the first key on a tie, so Fly wins, same as the notebook.
+    """
+    m = run_mission(obstacles=OBSTACLES, prior=0.40, p_alert_windy=0.50, p_alert_calm=0.50, alert=True)
+    assert m["L"] == 10
+    assert m["b"] == pytest.approx(break_even(10)) == pytest.approx(0.40)
+    assert m["Q"]["Fly"] == pytest.approx(-2.0) and m["Q"]["Wait"] == -2
+    assert m["action"] == "Fly"
+
+
+def test_bayes_rejects_zero_evidence():
+    with pytest.raises(ValueError, match="evidence"):
+        bayes(1.0, 0.0, 0.5)
+    with pytest.raises(ValueError, match="evidence"):
+        wind_belief(0.0, 0.8, 1.0, False)

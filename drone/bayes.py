@@ -8,10 +8,15 @@ ALERT_RECEIVED = True     # the drone did receive an alert
 
 
 def bayes(prior: float, p_obs_if_true: float, p_obs_if_false: float) -> float:
-    """Posterior P(true | observation) after one observation."""
+    """Posterior P(true | observation) after one observation.
+
+    The evidence P(observation) = score_true + score_false must be positive;
+    otherwise the posterior is undefined and a ValueError is raised.
+    """
     # Posterior P(true | observation) after one observation.
     score_true = prior * p_obs_if_true
     score_false = (1 - prior) * p_obs_if_false
+    if score_true + score_false == 0: raise ValueError("evidence P(observation) is 0; posterior undefined")
     return score_true / (score_true + score_false)
 
 
