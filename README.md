@@ -1,0 +1,95 @@
+# Mini Drone Parcel Route
+
+AIF1303 AI Fundamentals · QAIRU · Fall 2026 · final project
+Akhmetzhan Turlybek · Group 1 · individual project
+
+A delivery drone on a 6×6 town grid must carry one parcel from the depot to a customer. Before take-off it gets a weather alert and has to decide: **fly now or wait**. Three course algorithms solve it together, each feeding the next.
+
+![The local demo app at 1920×1080](docs/app-screenshot.png)
+
+## The pipeline
+
+| Step | Algorithm | Question | Output passed on |
+|---|---|---|---|
+| 1 | **A\* search** · Manhattan heuristic, 4 directions, step cost 1 | What is the shortest route around the obstacles? | route length **L** |
+| 2 | **Bayesian inference** | After the alert, how likely is strong wind? | belief **b = P(Windy \| alert)** |
+| 3 | **MDP, one Bellman update** from V₀ = 0 | Fly now or wait? | the action |
+
+- **A\*** expands the open node with the smallest f = g + h. Ties in f go to the smaller h, then to the node pushed first (an insertion counter). Manhattan distance never overestimates on this grid, so the route is optimal.
+- **Bayes:** b = P(alert | W)·P(W) / [P(alert | W)·P(W) + P(alert | C)·P(C)]. With no alert, the "no alert" likelihoods 1 − P(alert | ·) are used.
+- **MDP:** R(Calm, Fly) = 20 − L, R(Windy, Fly) = −20, R(·, Wait) = −2. Because V₀ = 0, Q(s, a) = R(s, a), and the drone weights the two states by b:
+  Q(Fly) = (1 − b)(20 − L) + b(−20), Q(Wait) = −2. The larger Q wins.
+- **Break-even belief:** Q(Fly) = Q(Wait) at b\* = (22 − L) / (40 − L), which is 0.40 for L = 10. The drone flies only when b < b\*.
+
+## Results
+
+Main scenario: start (0,0), goal (5,5), obstacles (1,1) (2,3) (4,4); P(Windy) = 0.30, P(alert | Windy) = 0.80, P(alert | Calm) = 0.20.
+
+| Case | L | A\* nodes (h = 0) | b | Q(Fly) | Q(Wait) | Decision |
+|---|---|---|---|---|---|---|
+| Alert received | 10 | 11 (33) | 0.6316 | −8.95 | −2.00 | **Wait** |
+| No alert | 10 | 11 (33) | 0.0968 | 7.10 | −2.00 | **Fly** |
+| Two long walls, no alert | 20 | 21 (26) | 0.0968 | −1.94 | −2.00 | **Fly** (only just) |
+| Goal walled in | no route | 33 (33) | not used | not computed | −2.00 | **Wait** |
+
+The alert raises the wind belief from 0.30 to 0.6316, above b\* = 0.40, so the drone waits. Without the alert the belief drops to 0.0968 and it flies.
+
+## Repository layout
+
+```
+drone/        astar.py · bayes.py · mdp.py · pipeline.py   (moved from the notebook, logic unchanged)
+              inputs.py                                     (strict obstacle validation for the app)
+tests/        pytest: the notebook's test cases plus property checks
+app.py        the local Streamlit demo
+notebook/     aif-project-notebook.ipynb                     (the submitted notebook, unchanged)
+docs/         screenshot; report, slides, video and AI declaration are added here
+static/fonts/ vendored OFL fonts, served locally
+```
+
+## How to run
+
+Python 3.12.
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate            # Windows: .venv\Scripts\activate
+pip install --require-hashes -r requirements.txt
+streamlit run app.py                 # opens on http://localhost:8501
+```
+
+Tests:
+
+```bash
+pip install --require-hashes -r requirements-dev.txt
+pytest
+```
+
+The app's sidebar has a **Scenario** picker (Main · alert received, No alert, Two long walls, Goal walled in) that fills in the controls, an **Obstacles** field (`row,col` cells separated by spaces, for example `1,1 2,3 4,4`), three probability sliders and an **Alert received** toggle. The main area shows, in order: the grid with the A\* route, the Bayes update with its arithmetic, the MDP reward table and Q values with b\*, and the decision.
+
+## Tests
+
+`pytest` runs the notebook's own cases (the four scenarios above and the 11 vs 33 node counts) and property checks: A\* and the h = 0 search return equal route lengths on 200 seeded random grids, Manhattan distance never exceeds the true BFS distance, posteriors sum to 1, the decision flips exactly at b\* = (22 − L) / (40 − L), and a walled-in goal always gives Wait. CI runs them on every push.
+
+## Assumptions and limits
+
+- **All numbers are invented** toy values: the map, the sensor probabilities and the rewards.
+- One sensor reading, one decision step (a single Bellman update from V₀ = 0), so waiting has no future value beyond its fixed cost.
+- The wind is assumed to be the same over the whole map; every step costs the same battery.
+
+## Possible improvements
+
+1. Full value iteration with weather transitions (Calm ↔ Windy over time), so waiting has a real future value.
+2. A hidden Markov model to track the wind over several alerts instead of one.
+3. A wind-risk cost per cell inside A\* (cost = steps + risk), so the route itself avoids windy areas.
+
+## Security
+
+The app is local-only: it binds to `localhost`, makes no network requests, has no uploads, and installs pinned, hash-checked dependencies. See [SECURITY.md](SECURITY.md).
+
+## AI use
+
+AI tools were used in this project. What was used and how is declared in [docs/ai-declaration.md](docs/ai-declaration.md).
+
+## Licence
+
+Code: [MIT](LICENSE). Fonts in `static/fonts/`: SIL Open Font License 1.1 (see [static/fonts/OFL.txt](static/fonts/OFL.txt)).
