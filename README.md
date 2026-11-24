@@ -3,13 +3,13 @@
 AIF1303 AI Fundamentals · QAIRU · Fall 2026 · final project
 Akhmetzhan Turlybek · Group 1 · individual project
 
-A delivery drone on a 6×6 town grid must carry one parcel from the depot to a customer. Before take-off it gets a weather alert and has to decide: **fly now or wait**. Three course algorithms solve it together, each feeding the next.
+A delivery drone on a 6×6 town grid must carry one parcel from the depot to a customer. Before take-off it gets a weather alert and has to decide: **fly now or wait**. Three course algorithms solve it together: A\* search and Bayesian inference each supply an independent input (the route length L and the wind belief b), and the MDP combines the two into one decision.
 
 ![The local demo app at 1920×1080](docs/app-screenshot.png)
 
 ## The pipeline
 
-| Step | Algorithm | Question | Output passed on |
+| Step | Algorithm | Question | Output passed to the MDP |
 |---|---|---|---|
 | 1 | **A\* search** · Manhattan heuristic, 4 directions, step cost 1 | What is the shortest route around the obstacles? | route length **L** |
 | 2 | **Bayesian inference** | After the alert, how likely is strong wind? | belief **b = P(Windy \| alert)** |
@@ -19,7 +19,8 @@ A delivery drone on a 6×6 town grid must carry one parcel from the depot to a c
 - **Bayes:** b = P(alert | W)·P(W) / [P(alert | W)·P(W) + P(alert | C)·P(C)]. With no alert, the "no alert" likelihoods 1 − P(alert | ·) are used.
 - **MDP:** R(Calm, Fly) = 20 − L, R(Windy, Fly) = −20, R(·, Wait) = −2. Because V₀ = 0, Q(s, a) = R(s, a), and the drone weights the two states by b:
   Q(Fly) = (1 − b)(20 − L) + b(−20), Q(Wait) = −2. The larger Q wins.
-- **Break-even belief:** Q(Fly) = Q(Wait) at b\* = (22 − L) / (40 − L), which is 0.40 for L = 10. The drone flies only when b < b\*.
+- **Break-even belief:** Q(Fly) = Q(Wait) at b\* = (22 − L) / (40 − L), which is 0.40 for L = 10. The drone flies when b < b\* and waits when b > b\*.
+- **Exact tie:** at b = b\* both Q values are equal (for example prior 0.40 with both sensor rates 0.50 gives b = 0.40 and Q = −2.00 for both). `max` returns the first action in the list, so **Fly wins ties**, as in the notebook. The app labels this case as a tie.
 
 ## Results
 
@@ -43,7 +44,7 @@ tests/        pytest: the notebook's test cases plus property checks
 app.py        the local Streamlit demo
 notebook/     aif-project-notebook.ipynb                     (the submitted notebook, unchanged)
 docs/         screenshot; report, slides, video and AI declaration are added here
-static/fonts/ vendored OFL fonts, served locally
+fonts/        vendored OFL fonts, inlined into the page as data URIs
 ```
 
 ## How to run
@@ -68,7 +69,7 @@ The app's sidebar has a **Scenario** picker (Main · alert received, No alert, T
 
 ## Tests
 
-`pytest` runs the notebook's own cases (the four scenarios above and the 11 vs 33 node counts) and property checks: A\* and the h = 0 search return equal route lengths on 200 seeded random grids, Manhattan distance never exceeds the true BFS distance, posteriors sum to 1, the decision flips exactly at b\* = (22 − L) / (40 − L), and a walled-in goal always gives Wait. CI runs them on every push.
+`pytest` runs the notebook's own cases (the four scenarios above and the 11 vs 33 node counts) and property checks: A\* and the h = 0 search return equal route lengths on 200 seeded random grids, Manhattan distance never exceeds the true BFS distance, posteriors sum to 1, the decision flips exactly at b\* = (22 − L) / (40 − L) (with an exact-tie regression test: Fly wins), Bayes rejects zero evidence, and a walled-in goal always gives Wait. The BFS used as ground truth has its own neighbour generator. CI runs them on every push.
 
 ## Assumptions and limits
 
@@ -84,7 +85,7 @@ The app's sidebar has a **Scenario** picker (Main · alert received, No alert, T
 
 ## Security
 
-The app is local-only: it binds to `localhost`, makes no network requests, has no uploads, and installs pinned, hash-checked dependencies. See [SECURITY.md](SECURITY.md).
+The app is local-only: it binds to `localhost`, makes no network requests, serves no static files, has no uploads, and installs pinned, hash-checked dependencies. See [SECURITY.md](SECURITY.md).
 
 ## AI use
 
@@ -92,4 +93,4 @@ AI tools were used in this project. What was used and how is declared in [docs/a
 
 ## Licence
 
-Code: [MIT](LICENSE). Fonts in `static/fonts/`: SIL Open Font License 1.1 (see [static/fonts/OFL.txt](static/fonts/OFL.txt)).
+Code: [MIT](LICENSE). Fonts in `fonts/`: SIL Open Font License 1.1 (see [fonts/OFL.txt](fonts/OFL.txt)).
