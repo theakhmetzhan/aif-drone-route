@@ -41,7 +41,8 @@ tests/        pytest: the notebook's test cases plus property checks
 app.py        the local Streamlit demo
 notebook/     aif-project-notebook.ipynb                     (the original notebook, unchanged)  
 docs/         technical report (aif-project-report.pdf), slides (aif-project-slides.pdf),
-              2:08 demo video (aif-project-demo-video.mp4 + .srt), app screenshot
+              2:08 demo video (aif-project-demo-video.mp4 + .srt), app screenshot,
+              AI usage declaration (ai-declaration.md + .pdf), team contribution statement
 fonts/        vendored OFL fonts, inlined into the page as data URIs
 ```
 
