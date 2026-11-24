@@ -1,9 +1,6 @@
 # Mini Drone Parcel Route
 
-AIF1303 AI Fundamentals · QAIRU · Fall 2026 · final project
-Akhmetzhan Turlybek · Group 1 · individual project
-
-A delivery drone on a 6×6 town grid must carry one parcel from the depot to a customer. Before take-off it gets a weather alert and has to decide: **fly now or wait**. Three course algorithms solve it together: A\* search and Bayesian inference each supply an independent input (the route length L and the wind belief b), and the MDP combines the two into one decision.
+A delivery drone on a 6×6 town grid must carry one parcel from the depot to a customer. Before take-off it gets a weather alert and has to decide: **fly now or wait**. Three AI algorithms solve it together: A\* search and Bayesian inference each supply an independent input (the route length L and the wind belief b), and the MDP combines the two into one decision.
 
 ![The local demo app at 1920×1080](docs/app-screenshot.png)
 
@@ -42,7 +39,7 @@ drone/        astar.py · bayes.py · mdp.py · pipeline.py   (moved from the no
               inputs.py                                     (strict obstacle validation for the app)
 tests/        pytest: the notebook's test cases plus property checks
 app.py        the local Streamlit demo
-notebook/     aif-project-notebook.ipynb                     (the submitted notebook, unchanged)
+notebook/     aif-project-notebook.ipynb                     (the original notebook, unchanged)  
 docs/         technical report (aif-project-report.pdf), slides (aif-project-slides.pdf),
               2:30 demo video (aif-project-demo-video.mp4 + .srt), app screenshot
 fonts/        vendored OFL fonts, inlined into the page as data URIs

@@ -279,7 +279,7 @@ mission = run_mission(obstacles, prior, p_w, p_c, alert) if (bayes_ok or path is
 
 # ------------------------------------------------------------- header -------
 st.html(
-    eyebrow("AIF1303 · AI fundamentals · final project")
+    eyebrow("Delivery drone · decision demo")
     + '<h1 class="hero-title">Mini drone parcel route.</h1>'
     + '<p class="hero-sub">A* finds the route, Bayes reads the weather alert, one Bellman update decides: '
       'fly now or wait.</p>'
