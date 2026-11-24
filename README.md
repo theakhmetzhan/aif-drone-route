@@ -19,8 +19,8 @@ A delivery drone on a 6×6 town grid must carry one parcel from the depot to a c
 - **Bayes:** b = P(alert | W)·P(W) / [P(alert | W)·P(W) + P(alert | C)·P(C)]. With no alert, the "no alert" likelihoods 1 − P(alert | ·) are used.
 - **MDP:** R(Calm, Fly) = 20 − L, R(Windy, Fly) = −20, R(·, Wait) = −2. Because V₀ = 0, Q(s, a) = R(s, a), and the drone weights the two states by b:
   Q(Fly) = (1 − b)(20 − L) + b(−20), Q(Wait) = −2. The larger Q wins.
-- **Break-even belief:** Q(Fly) = Q(Wait) at b\* = (22 − L) / (40 − L), which is 0.40 for L = 10. The drone flies when b < b\* and waits when b > b\*.
-- **Exact tie:** at b = b\* both Q values are equal (for example prior 0.40 with both sensor rates 0.50 gives b = 0.40 and Q = −2.00 for both). `max` returns the first action in the list, so **Fly wins ties**, as in the notebook. The app labels this case as a tie.
+- **Decision rule:** the larger computed Q wins. An exact computed tie goes to Fly, because `max` returns the first action in the list, as in the notebook.
+- **Break-even belief:** analytically Q(Fly) = Q(Wait) at b\* = (22 − L) / (40 − L), which is 0.40 for L = 10. This is the analytic threshold, not a guarantee of a computed tie: floating-point rounding can tip values exactly at it either way. Prior 0.40 with both sensor rates 0.50 gives an exact computed tie (Fly); L = 12 with b = 10/28 gives Q(Fly) a hair below −2, so Wait. The app reports which computed score is higher when both round to the same two decimals.
 
 ## Results
 
@@ -31,7 +31,7 @@ Main scenario: start (0,0), goal (5,5), obstacles (1,1) (2,3) (4,4); P(Windy) = 
 | Alert received | 10 | 11 (33) | 0.6316 | −8.95 | −2.00 | **Wait** |
 | No alert | 10 | 11 (33) | 0.0968 | 7.10 | −2.00 | **Fly** |
 | Two long walls, no alert | 20 | 21 (26) | 0.0968 | −1.94 | −2.00 | **Fly** (only just) |
-| Goal walled in | no route | 33 (33) | not used | not computed | −2.00 | **Wait** |
+| Goal walled in | no route | 33 (33) | not used | not computed (no route) | not computed (no route); the app shows the fixed Wait reward −2 | **Wait** |
 
 The alert raises the wind belief from 0.30 to 0.6316, above b\* = 0.40, so the drone waits. Without the alert the belief drops to 0.0968 and it flies.
 

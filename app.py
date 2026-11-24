@@ -49,7 +49,6 @@ SCENARIOS = {
     "Goal walled in": dict(obstacles="4,5 5,4", prior=0.30, p_w=0.80, p_c=0.20, alert=True),
 }
 DEFAULT_SCENARIO = "Main · alert received"
-TIE_TOLERANCE = 1e-9   # |Q(Fly) - Q(Wait)| below this is shown as a tie (text only)
 
 st.set_page_config(
     page_title="Mini drone parcel route",
@@ -348,16 +347,21 @@ with right:
             f'Break-even b* = <span class="num">(22 − L) / (40 − L) = {22 - L} / {40 - L} = <b>{num(b_star, 4)}</b></span>'
             '<span style="color:var(--text-faint)"> · fly if b &lt; b*, ties go to Fly</span></p>'
         )
-        if abs(Q["Fly"] - Q["Wait"]) < TIE_TOLERANCE:   # display only; the decision is choose_action's
-            why = (f'Tie: Q(Fly) <span class="num">{num(Q["Fly"])}</span> = Q(Wait) <span class="num">{num(Q["Wait"])}</span>'
-                   f' · b <span class="num">{num(b, 4)}</span> equals b* <span class="num">{num(b_star, 4)}</span>'
-                   f' · Fly wins ties, max picks the first action')
+        # The text follows the computed Q values exactly, the same comparison choose_action makes.
+        rel = "below" if b < b_star else "above" if b > b_star else "equal to"
+        b_vs = (f' · b <span class="num">{num(b, 4)}</span> is {rel} b* <span class="num">{num(b_star, 4)}</span>')
+        if Q["Fly"] == Q["Wait"]:
+            why = (f'Exact tie: Q(Fly) = Q(Wait) = <span class="num">{num(Q["Fly"])}</span>'
+                   ' · Fly wins ties, max picks the first action')
+        elif num(Q["Fly"]) == num(Q["Wait"]):
+            higher = "Fly" if Q["Fly"] > Q["Wait"] else "Wait"
+            gap = f"{abs(Q['Fly'] - Q['Wait']):.1e}".replace("-", "\u2212")
+            why = (f'Q({higher}) is higher by <span class="num">{gap}</span>'
+                   ' · the scores round to the same 2 decimals · floating-point rounding at the break-even')
         elif action == "Fly":
-            why = (f'Q(Fly) <span class="num">{num(Q["Fly"])}</span> &gt; Q(Wait) <span class="num">{num(Q["Wait"])}</span>'
-                   f' · b <span class="num">{num(b, 4)}</span> is below b* <span class="num">{num(b_star, 4)}</span>')
+            why = (f'Q(Fly) <span class="num">{num(Q["Fly"])}</span> &gt; Q(Wait) <span class="num">{num(Q["Wait"])}</span>' + b_vs)
         else:
-            why = (f'Q(Fly) <span class="num">{num(Q["Fly"])}</span> &lt; Q(Wait) <span class="num">{num(Q["Wait"])}</span>'
-                   f' · b <span class="num">{num(b, 4)}</span> is above b* <span class="num">{num(b_star, 4)}</span>')
+            why = (f'Q(Fly) <span class="num">{num(Q["Fly"])}</span> &lt; Q(Wait) <span class="num">{num(Q["Wait"])}</span>' + b_vs)
         decision = action.upper()
     elif path is None:
         rows = "".join(

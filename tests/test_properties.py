@@ -125,3 +125,25 @@ def test_bayes_rejects_zero_evidence():
         bayes(1.0, 0.0, 0.5)
     with pytest.raises(ValueError, match="evidence"):
         wind_belief(0.0, 0.8, 1.0, False)
+
+
+def test_near_tie_rounding_goes_to_computed_winner():
+    """Prior 0.40, both sensor rates 0.05: b is 0.4000000000000001, a hair above b* = 0.40.
+
+    Q(Fly) is -2.0000000000000036 < Q(Wait) = -2.0, so the computed decision is Wait.
+    """
+    m = run_mission(obstacles=OBSTACLES, prior=0.40, p_alert_windy=0.05, p_alert_calm=0.05, alert=True)
+    assert m["L"] == 10
+    assert m["Q"]["Fly"] != m["Q"]["Wait"]
+    assert m["Q"]["Fly"] < m["Q"]["Wait"]
+    assert round(m["Q"]["Fly"], 2) == round(m["Q"]["Wait"], 2)
+    assert m["action"] == "Wait"
+
+
+def test_rounding_at_analytic_threshold_l12():
+    """L = 12, b = 10/28 = b* analytically, but the computed Q(Fly) is just below -2: Wait."""
+    b = 10 / 28
+    assert b == pytest.approx(break_even(12))
+    action, q, _ = choose_action(b, 12)
+    assert q["Fly"] < q["Wait"]
+    assert action == "Wait"
