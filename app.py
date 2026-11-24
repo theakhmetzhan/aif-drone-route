@@ -3,13 +3,15 @@
 Run with:  streamlit run app.py
 
 Security notes
-- No network calls, no file uploads, no eval/exec/pickle/subprocess.
+- No network calls, no file uploads, no static file route, no eval/exec/pickle/subprocess.
 - Every HTML string below is either a constant or built from validated
   numbers; anything text-like passes through html.escape first. st.html
   additionally sanitises with DOMPurify in the browser.
 """
 
+import base64
 from html import escape
+from pathlib import Path
 
 import streamlit as st
 
@@ -47,6 +49,7 @@ SCENARIOS = {
     "Goal walled in": dict(obstacles="4,5 5,4", prior=0.30, p_w=0.80, p_c=0.20, alert=True),
 }
 DEFAULT_SCENARIO = "Main · alert received"
+TIE_TOLERANCE = 1e-9   # |Q(Fly) - Q(Wait)| below this is shown as a tie (text only)
 
 st.set_page_config(
     page_title="Mini drone parcel route",
@@ -56,24 +59,37 @@ st.set_page_config(
 )
 
 # ------------------------------------------------------------------- css ----
-# Constant string only. Fonts are vendored woff2 files served by Streamlit's
-# static serving from ./static, so the page makes no external requests.
-FONT_FACES = "".join(
-    f"@font-face{{font-family:'{fam}';font-style:normal;font-weight:{w};font-display:swap;"
-    f"src:url('app/static/fonts/{file}.woff2') format('woff2');}}"
-    for fam, w, file in [
-        ("Space Grotesk", 300, "SpaceGrotesk-300"),
-        ("Space Grotesk", 400, "SpaceGrotesk-400"),
-        ("Space Grotesk", 500, "SpaceGrotesk-500"),
-        ("Inter", 400, "Inter-400"),
-        ("Inter", 500, "Inter-500"),
-        ("Inter", 600, "Inter-600"),
-        ("Geist", "100 900", "Geist-400"),
-        ("JetBrains Mono", "100 800", "JetBrainsMono-400"),
-    ]
-)
+# Fonts are vendored woff2 files in ./fonts, embedded as base64 data URIs in a
+# constant CSS string built once per process. No static file route, no
+# external requests.
+FONT_DIR = Path(__file__).resolve().parent / "fonts"
+FONT_FILES = [
+    ("Space Grotesk", "300", "SpaceGrotesk-300"),
+    ("Space Grotesk", "400", "SpaceGrotesk-400"),
+    ("Space Grotesk", "500", "SpaceGrotesk-500"),
+    ("Inter", "400", "Inter-400"),
+    ("Inter", "500", "Inter-500"),
+    ("Inter", "600", "Inter-600"),
+    ("Geist", "100 900", "Geist-400"),
+    ("JetBrains Mono", "100 800", "JetBrainsMono-400"),
+]
 
-CSS = FONT_FACES + f"""
+
+@st.cache_resource(show_spinner=False)
+def font_faces_css() -> str:
+    """@font-face rules with the vendored fonts inlined. Missing files are skipped (system fallback)."""
+    rules = []
+    for family, weight, name in FONT_FILES:
+        path = FONT_DIR / f"{name}.woff2"
+        if not path.is_file():
+            continue
+        data = base64.b64encode(path.read_bytes()).decode("ascii")
+        rules.append(f"@font-face{{font-family:'{family}';font-style:normal;font-weight:{weight};"
+                     f"font-display:swap;src:url(data:font/woff2;base64,{data}) format('woff2');}}")
+    return "".join(rules)
+
+
+CSS = font_faces_css() + f"""
 :root {{
   --bg:{BG}; --well:{WELL}; --surface-1:{SURFACE_1}; --surface-2:{SURFACE_2}; --surface-3:{SURFACE_3};
   --text:{TEXT}; --text-muted:{TEXT_MUTED}; --text-subtle:{TEXT_SUBTLE}; --text-faint:{TEXT_FAINT};
@@ -330,10 +346,14 @@ with right:
             f'Q(Fly) = <span class="num">{num(1 - b, 4)} × {num(R[("Calm", "Fly")], 0)} + {num(b, 4)} × ({num(CRASH_PENALTY, 0)}) = <b>{num(Q["Fly"])}</b></span><br>'
             f'Q(Wait) = <span class="num">{num(1 - b, 4)} × ({num(WAIT_COST, 0)}) + {num(b, 4)} × ({num(WAIT_COST, 0)}) = <b>{num(Q["Wait"])}</b></span><br>'
             f'Break-even b* = <span class="num">(22 − L) / (40 − L) = {22 - L} / {40 - L} = <b>{num(b_star, 4)}</b></span>'
-            '<span style="color:var(--text-faint)"> · fly only if b &lt; b*</span></p>'
+            '<span style="color:var(--text-faint)"> · fly if b &lt; b*, ties go to Fly</span></p>'
         )
-        if action == "Fly":
-            why = (f'Q(Fly) <span class="num">{num(Q["Fly"])}</span> ≥ Q(Wait) <span class="num">{num(Q["Wait"])}</span>'
+        if abs(Q["Fly"] - Q["Wait"]) < TIE_TOLERANCE:   # display only; the decision is choose_action's
+            why = (f'Tie: Q(Fly) <span class="num">{num(Q["Fly"])}</span> = Q(Wait) <span class="num">{num(Q["Wait"])}</span>'
+                   f' · b <span class="num">{num(b, 4)}</span> equals b* <span class="num">{num(b_star, 4)}</span>'
+                   f' · Fly wins ties, max picks the first action')
+        elif action == "Fly":
+            why = (f'Q(Fly) <span class="num">{num(Q["Fly"])}</span> &gt; Q(Wait) <span class="num">{num(Q["Wait"])}</span>'
                    f' · b <span class="num">{num(b, 4)}</span> is below b* <span class="num">{num(b_star, 4)}</span>')
         else:
             why = (f'Q(Fly) <span class="num">{num(Q["Fly"])}</span> &lt; Q(Wait) <span class="num">{num(Q["Wait"])}</span>'

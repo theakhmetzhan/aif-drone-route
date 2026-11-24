@@ -11,9 +11,9 @@ runOnSave = false
 fileWatcherType = "none"
 enableCORS = true
 enableXsrfProtection = true
-maxUploadSize = 1                # MB; the app has no file uploader
+maxUploadSize = 0                # MB; no uploader exists, so the built-in upload route rejects any body
 maxMessageSize = 5               # MB
-enableStaticServing = true       # only to serve the vendored fonts in ./static
+enableStaticServing = false      # fonts are inlined as data URIs; no static route
 enableAgentApi = false
 
 [browser]
@@ -41,31 +41,6 @@ font = "Inter, system-ui, sans-serif"
 headingFont = "'Space Grotesk', Inter, sans-serif"
 codeFont = "'JetBrains Mono', monospace"
 baseFontSize = 14
-
-[[theme.fontFaces]]
-family = "Inter"
-url = "app/static/fonts/Inter-400.woff2"
-weight = 400
-
-[[theme.fontFaces]]
-family = "Inter"
-url = "app/static/fonts/Inter-500.woff2"
-weight = 500
-
-[[theme.fontFaces]]
-family = "Inter"
-url = "app/static/fonts/Inter-600.woff2"
-weight = 600
-
-[[theme.fontFaces]]
-family = "Space Grotesk"
-url = "app/static/fonts/SpaceGrotesk-300.woff2"
-weight = 300
-
-[[theme.fontFaces]]
-family = "JetBrains Mono"
-url = "app/static/fonts/JetBrainsMono-400.woff2"
-weight = 400
 
 [theme.sidebar]
 backgroundColor = "#0e0e14"

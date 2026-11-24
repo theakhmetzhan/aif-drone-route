@@ -1,6 +1,6 @@
 # Vendored fonts
 
-Latin-subset woff2 files, served locally by Streamlit static serving so the app makes no external requests. All four families are licensed under the SIL Open Font License 1.1 (full text in `OFL.txt`). The MIT licence of this repository does not apply to these files.
+Latin-subset woff2 files, embedded into the page as base64 data URIs at startup, so the app needs no static file route and makes no external requests. All four families are licensed under the SIL Open Font License 1.1 (full text in `OFL.txt`). The MIT licence of this repository does not apply to these files.
 
 | File | Family | Copyright |
 |---|---|---|
