@@ -1,0 +1,147 @@
+1
+00:00:00,500 --> 00:00:02,010
+Mini Drone Parcel Route.
+
+2
+00:00:02,060 --> 00:00:08,850
+An AI Fundamentals final project at QAIRU
+by Akhmetzhan Turlybek.
+
+3
+00:00:10,500 --> 00:00:14,770
+A drone needs to deliver one parcel across
+a six-by-six map.
+
+4
+00:00:15,200 --> 00:00:19,050
+It has to get around obstacles and decide
+whether to take off.
+
+5
+00:00:19,320 --> 00:00:24,110
+Before it flies, a weather sensor gives it
+one clue about the wind.
+
+6
+00:00:28,500 --> 00:00:30,610
+A-star finds the shortest route.
+
+7
+00:00:30,860 --> 00:00:34,890
+It adds the steps taken so far to the
+Manhattan distance remaining.
+
+8
+00:00:35,060 --> 00:00:38,810
+That distance counts the rows and columns
+still to cross.
+
+9
+00:00:39,160 --> 00:00:41,710
+The shortest route takes ten steps.
+
+10
+00:00:41,980 --> 00:00:45,190
+A-star expands eleven nodes with this
+estimate.
+
+11
+00:00:45,580 --> 00:00:49,530
+With the estimate set to zero, the search
+expands thirty-three.
+
+12
+00:00:50,000 --> 00:00:52,030
+The route length stays the same.
+
+13
+00:00:55,500 --> 00:00:59,770
+Before the alert, the probability of wind
+is zero point three zero.
+
+14
+00:01:00,400 --> 00:01:07,850
+The sensor alerts with probability zero
+point eight zero when it’s windy, and zero
+point two zero when it’s calm.
+
+15
+00:01:08,320 --> 00:01:14,230
+Once the alert comes in, Bayes’ rule
+raises our wind belief to zero point six
+three one six.
+
+16
+00:01:19,500 --> 00:01:22,990
+One Bellman update combines the route and
+the wind belief.
+
+17
+00:01:23,320 --> 00:01:27,870
+Flying earns ten in calm weather and loses
+twenty in wind.
+
+18
+00:01:28,120 --> 00:01:33,830
+Weighting those rewards by their
+probabilities gives Fly a score of minus
+eight point nine five.
+
+19
+00:01:34,500 --> 00:01:36,270
+Wait scores minus two.
+
+20
+00:01:36,320 --> 00:01:38,850
+That’s higher, so the drone waits.
+
+21
+00:01:43,500 --> 00:01:45,090
+Now we turn off the alert.
+
+22
+00:01:45,140 --> 00:01:51,150
+The route stays at ten steps, but the wind
+belief falls to zero point zero nine six
+eight.
+
+23
+00:01:51,580 --> 00:01:55,470
+That’s below the break-even probability of
+zero point four zero.
+
+24
+00:01:55,740 --> 00:01:57,830
+The decision flips to Fly.
+
+25
+00:02:02,500 --> 00:02:04,750
+Both approaches to the goal are blocked.
+
+26
+00:02:04,860 --> 00:02:09,110
+A-star finds no route, so the app selects
+Wait.
+
+27
+00:02:09,320 --> 00:02:12,270
+The drone needs a route before it can take
+off.
+
+28
+00:02:15,500 --> 00:02:16,790
+All tests pass.
+
+29
+00:02:16,900 --> 00:02:21,510
+They cover both alert settings, the longer
+route, and the blocked goal.
+
+30
+00:02:21,560 --> 00:02:24,630
+The two searches also agree on route
+length.
+
+31
+00:02:25,500 --> 00:02:27,430
+The code is available on GitHub.

@@ -43,7 +43,8 @@ drone/        astar.py · bayes.py · mdp.py · pipeline.py   (moved from the no
 tests/        pytest: the notebook's test cases plus property checks
 app.py        the local Streamlit demo
 notebook/     aif-project-notebook.ipynb                     (the submitted notebook, unchanged)
-docs/         screenshot; report, slides, video and AI declaration are added here
+docs/         technical report (aif-project-report.pdf), slides (aif-project-slides.pdf),
+              2:30 demo video (aif-project-demo-video.mp4 + .srt), app screenshot
 fonts/        vendored OFL fonts, inlined into the page as data URIs
 ```
 
