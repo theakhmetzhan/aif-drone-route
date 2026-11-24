@@ -1,0 +1,72 @@
+# Local-only, minimal surface. See SECURITY.md.
+
+[global]
+showWarningOnDirectExecution = false
+
+[server]
+address = "localhost"            # loopback only (127.0.0.1 and ::1)
+port = 8501
+headless = true                  # never opens a browser or asks for an email
+runOnSave = false
+fileWatcherType = "none"
+enableCORS = true
+enableXsrfProtection = true
+maxUploadSize = 1                # MB; the app has no file uploader
+maxMessageSize = 5               # MB
+enableStaticServing = true       # only to serve the vendored fonts in ./static
+enableAgentApi = false
+
+[browser]
+serverAddress = "localhost"
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"
+showErrorDetails = "none"        # never show a traceback in the page
+showSidebarNavigation = false
+
+[runner]
+magicEnabled = false
+
+[theme]
+base = "dark"
+primaryColor = "#c3c7d1"         # neutral on purpose: the accent is reserved for route and decision
+backgroundColor = "#010102"
+secondaryBackgroundColor = "#17171f"
+textColor = "#f7f8f8"
+borderColor = "#2a2a33"
+showWidgetBorder = true
+baseRadius = "2px"
+font = "Inter, system-ui, sans-serif"
+headingFont = "'Space Grotesk', Inter, sans-serif"
+codeFont = "'JetBrains Mono', monospace"
+baseFontSize = 14
+
+[[theme.fontFaces]]
+family = "Inter"
+url = "app/static/fonts/Inter-400.woff2"
+weight = 400
+
+[[theme.fontFaces]]
+family = "Inter"
+url = "app/static/fonts/Inter-500.woff2"
+weight = 500
+
+[[theme.fontFaces]]
+family = "Inter"
+url = "app/static/fonts/Inter-600.woff2"
+weight = 600
+
+[[theme.fontFaces]]
+family = "Space Grotesk"
+url = "app/static/fonts/SpaceGrotesk-300.woff2"
+weight = 300
+
+[[theme.fontFaces]]
+family = "JetBrains Mono"
+url = "app/static/fonts/JetBrainsMono-400.woff2"
+weight = 400
+
+[theme.sidebar]
+backgroundColor = "#0e0e14"
+secondaryBackgroundColor = "#17171f"
